@@ -10,14 +10,14 @@ export type User = {
 
 type AuthState = {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
   loading: boolean;
   error: string | null;
 };
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem("token") || null,
+  accessToken: localStorage.getItem("accessToken") || null,
   loading: false,
   error: null,
 };
@@ -30,9 +30,9 @@ export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const res = await api.post("/auth/login", credentials);
+      const res = await api.post("/login", credentials);
        toast.success("Logged in successfully!");
-      return res.data; // { user, token }
+      return res.data; // { user, accessToken }
     } catch (err: any) {
             toast.error(err.response?.data?.message || "Login failed"); // 🔥 toast on error
 
@@ -41,13 +41,14 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// 🔹 Fetch authenticated user data (token auto-attached via interceptor)
+// 🔹 Fetch authenticated user data (accessToken auto-attached via interceptor)
 export const fetchUser = createAsyncThunk(
   "auth/fetchUser",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get("/auth/authUserData");
-      return res.data; // { user, token }
+      const res = await api.get("/authUserData");
+      console.log(res.data)
+      return res.data; // { user, accessToken }
     } catch (err: any) {
       return rejectWithValue("Failed to fetch user");
     }
@@ -60,8 +61,8 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
-      state.token = null;
-      localStorage.removeItem("token");
+      state.accessToken = null;
+      localStorage.removeItem("accessToken");
     },
   },
   extraReducers: (builder) => {
@@ -74,8 +75,9 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
-        localStorage.setItem("token", action.payload.token);
+        state.accessToken = action.payload.accessToken;
+        console.log(action.payload.accessToken)
+        localStorage.setItem("accessToken", action.payload.accessToken);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -85,8 +87,9 @@ const authSlice = createSlice({
       // 🔹 fetch user
       .addCase(fetchUser.fulfilled, (state, action: PayloadAction<any>) => {
         state.user = action.payload.user;
-        state.token = action.payload.token;
-        localStorage.setItem("token", action.payload.token);
+        state.accessToken = action.payload.accessToken;
+        console.log(action.payload) 
+        localStorage.setItem("accessToken", action.payload.accessToken);
       })
       .addCase(fetchUser.rejected, (state, action) => {
         state.error = action.payload as string;

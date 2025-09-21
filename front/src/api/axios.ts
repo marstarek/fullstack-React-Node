@@ -11,44 +11,58 @@ const api = axios.create({
   },
 });
 
-// ✅ Add token automatically
+// ✅ Add accessToken automatically
 api.interceptors.request.use(
   (config) => {
-    const token = store.getState().auth.token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // 1. Try Redux accessToken first (fresh in memory)
+    const reduxToken = store.getState().auth.accessToken;
+    
+    // 2. Fallback to localStorage accessToken
+    const localToken = localStorage.getItem("accessToken");
+    console.log(store.getState(),localToken)
+
+    const accessToken = reduxToken || localToken;
+
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
+    // else {
+    //   delete config.headers.Authorization; // no token → no header
+    // }
+
     return config;
   },
-  (error) => {
+  (error: unknown) => {
     toast.error("Request error!");
     return Promise.reject(error);
   }
 );
 
-// ✅ Handle expired/invalid token & show toast for errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response) {
-      const status = error.response.status;
+// ✅ Handle expired/invalid accessToken
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response) {
+//       const status = error.response.status;
 
-      if (status === 401) {
-        toast.error("Session expired, please login again.");
-        store.dispatch(logout());
-      } else if (status === 403) {
-        toast.error("You don’t have permission to do this.");
-      } else if (status >= 500) {
-        toast.error("Server error, please try again later.");
-      } else {
-        toast.error(error.response.data?.message || "Request failed.");
-      }
-    } else {
-      toast.error("Network error, check your connection.");
-    }
+//       if (status === 401) {
+//         toast.error("Session expired, please login again.");
+//         store.dispatch(logout());
+//         localStorage.removeItem("accessToken");
+//         localStorage.removeItem("refreshToken");
+//       } else if (status === 403) {
+//         toast.error("You don’t have permission to do this.");
+//       } else if (status >= 500) {
+//         toast.error("Server error, please try again later.");
+//       } else {
+//         toast.error(error.response.data?.message || "Request failed.");
+//       }
+//     } else {
+//       toast.error("Network error, check your connection.");
+//     }
 
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 export default api;

@@ -1,10 +1,13 @@
-import mysql from "mysql2/promise";
+// import mysql from "mysql2/promise";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
-const db = await mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "auth_demo",
-});
+export default prisma;
+// const db = await mysql.createConnection({
+//   host: "localhost",
+//   user: "root",
+//   password: "",
+//   database: "auth_demo",
+// });
 
-export default db;
+// export default db;

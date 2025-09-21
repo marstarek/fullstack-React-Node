@@ -31,10 +31,11 @@ import AppRoute from './router/AppRoute'
 import type { AppDispatch, RootState } from './store';
 import { useEffect } from 'react';
 import { fetchUser } from './store/authSlice';
+import { GlobalDialogProvider } from './components/GlobalDialog/GlobalDialog';
 
 export default function App() {
     const dispatch = useDispatch<AppDispatch>();
-  const token = useSelector((state: RootState) => state.auth.token);
+  const token = useSelector((state: RootState) => state.auth.accessToken);
 
   useEffect(() => {
     // 🔹 if token exists in localStorage or Redux -> fetch user
@@ -43,9 +44,8 @@ export default function App() {
     }
   }, [token, dispatch]);
   return (
-    <div>
-     
+    <GlobalDialogProvider>
       <AppRoute />
-    </div>
+    </GlobalDialogProvider>
   )
 }

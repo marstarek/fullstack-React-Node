@@ -1,11 +1,38 @@
-// src/routes/ProtectedRoute.tsx
+import React from "react";
 import { Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store";
-import type { JSX } from "react";
 
-export default function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const { token } = useSelector((state: RootState) => state.auth);
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  roles?: string[];
+}
 
-  return token ? children : <Navigate to="/" replace />;
+function decodeToken(token: string | null) {
+  if (!token) return null;
+  try {
+    const base64Payload = token.split(".")[1];
+    if (!base64Payload) return null;
+
+    const payload = JSON.parse(atob(base64Payload));
+    return payload;
+  } catch (err) {
+    console.error("Failed to decode token:", err);
+    return null;
+  }
+}
+
+export default function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
+  const token = localStorage.getItem("accessToken");
+  const user = JSON.parse(localStorage.getItem("user") as string) 
+  console.log(token)
+  // const user = decodeToken(token);
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
 }

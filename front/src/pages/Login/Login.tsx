@@ -30,7 +30,7 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: yupResolver(schema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "tarek@gmail.com", password: "tarek@2025" },
   });
 
   // 🔹 React Query Mutation
@@ -39,11 +39,27 @@ export default function Login() {
       const res = await api.post("/login", data);
       return res.data; // { user, token }
     },
-    onSuccess: (data) => {
-      dispatch(loginUser.fulfilled(data, "loginUser", data));
-      // redirect to dashboard/home
-      window.location.href = "/";
-    },
+  onSuccess: (data) => {
+    console.log(data.accessToken)
+  localStorage.setItem("accessToken", data.accessToken);
+  localStorage.setItem("refreshToken", data.refreshToken);
+
+  // save user in localStorage too (optional)
+  localStorage.setItem("user", JSON.stringify(data.user));
+  dispatch(loginUser.fulfilled(data, "loginUser", data));
+
+  const role = data.user.role;
+console.log(role)
+  if (role === "SUPERADMIN") {
+    window.location.href = "/superAdmin/users";
+  } else if (role === "RESTAURANT_ADMIN") {
+    window.location.href = "/restaurant-dashboard";
+  } else {
+    window.location.href = "/favorites"; // default for USER
+  }
+
+  toast.success("Login successful!");
+},
     onError: (err: any) => {
       console.error(err.response?.data || err.message);
     },
